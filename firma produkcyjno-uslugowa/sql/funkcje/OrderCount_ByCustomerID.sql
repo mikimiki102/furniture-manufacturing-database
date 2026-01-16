@@ -9,4 +9,4 @@ BEGIN
 
   RETURN ISNULL(@cnt, 0);
 END
-GO
+
