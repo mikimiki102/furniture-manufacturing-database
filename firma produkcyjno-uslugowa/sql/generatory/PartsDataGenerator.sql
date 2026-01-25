@@ -41,10 +41,6 @@ SELECT
   CAST(1.40 + (ABS(CHECKSUM(NEWID())) % 12860) / 100.0 AS DECIMAL(10, 2))
 FROM Tally t;
 
-
--- =============================================
--- GRUPA 2: RODZAJ ŻEŃSKI (Ta Śruba, Ta Blacha)
--- =============================================
 DECLARE @AdjFem TABLE (val nvarchar(100));
 INSERT INTO @AdjFem VALUES
  (N'Stalowa'),(N'Aluminiowa'),(N'Ocynkowana'),(N'Nierdzewna'),(N'Mosiężna'),
