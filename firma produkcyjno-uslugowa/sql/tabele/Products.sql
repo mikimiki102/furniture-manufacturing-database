@@ -1,9 +1,16 @@
-﻿CREATE TABLE dbo.Products
+create table Products
 (
-    ProductID      INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Products PRIMARY KEY,
-    ProductName    NVARCHAR(200) NOT NULL,
-    Price          DECIMAL(10, 2) NOT NULL
-        CONSTRAINT CK_Products_Price_NonNegative CHECK (Price >= 0),
-    ProductionTime INT NOT NULL
-        CONSTRAINT CK_Products_ProductionTime_Positive CHECK (ProductionTime > 0)
-);
+    ProductID      int identity
+        primary key,
+    ProductName    nvarchar(200)  not null,
+    Price          decimal(10, 2) not null
+        constraint CK_Products_Price_NonNegative
+            check ([Price] >= 0),
+    ProductionTime int            not null
+        constraint CK_Products_ProductionTime_Positive
+            check ([ProductionTime] > 0),
+    PartID         int            not null
+        constraint FK_Products_Parts
+            references Parts
+)
+go
