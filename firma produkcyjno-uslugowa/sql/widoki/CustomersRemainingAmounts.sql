@@ -6,5 +6,6 @@ create or alter view dbo.v_CustomersRemainingAmounts as
     from Customers c
         inner join Orders o on o.CustomerID = c.CustomerID
     group by
-        o.OrderID, c.Name, c.Address, c.PhoneNumber;
+        o.OrderID, c.Name, c.Address, c.PhoneNumber
+    having sum(dbo.fn_RemainingOrderAmount(o.OrderID)) > 0;
 go
