@@ -1,3 +1,3 @@
-alter role admin;
+create role admin;
+grant all privileges to admin;
 
-grant all privileges on u_walek.* to admin;
