@@ -9,9 +9,6 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Employees WHERE isActive = 1)
 IF NOT EXISTS (SELECT 1 FROM dbo.Shippers WHERE isActive = 1)
     THROW 50012, N'Brak aktywnych dostawców.', 1;
 
--- DELETE FROM dbo.Orders;
--- DBCC CHECKIDENT('dbo.Orders', RESEED, 0);
-
 DECLARE @Countries TABLE (Country nvarchar(100), idx int);
 INSERT INTO @Countries VALUES
 (N'Polska',1),(N'Niemcy',2),(N'Czechy',3),(N'Słowacja',4),(N'Litwa',5),(N'Francja',6),(N'Hiszpania',7),(N'Włochy',8),(N'Holandia',9),(N'Szwecja',10),
@@ -92,7 +89,6 @@ SELECT
  Country,City,DeliveryPrice,Status
 FROM Old;
 
--- PODGLĄD (dd.mm.yyyy)
 SELECT TOP 40
  OrderID,
  CONVERT(varchar(10),OrderDate,104) OrderDate,
