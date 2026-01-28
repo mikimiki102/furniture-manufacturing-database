@@ -2,7 +2,7 @@ CREATE ROLE logistics;
 
 GRANT SELECT ON dbo.Orders TO logistics;
 GRANT SELECT ON dbo.Customers TO logistics;
-GRANT SELECT ON dbo.Shippers TO logistics;
+GRANT UPDATE ON dbo.Shippers TO logistics;
 GRANT SELECT ON dbo.Payments TO logistics;
 
 GRANT SELECT ON dbo.v_OrderSchedule TO logistics;
