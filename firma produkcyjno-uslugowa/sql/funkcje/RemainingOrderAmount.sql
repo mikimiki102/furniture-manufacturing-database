@@ -1,4 +1,4 @@
-create function dbo.fn_RemainingOrderAmount (@OrderID INT)
+create or alter function dbo.fn_RemainingOrderAmount (@OrderID INT)
 returns decimal(10,2) as
     begin
         declare @Amount decimal(10,2)
@@ -7,6 +7,7 @@ returns decimal(10,2) as
             inner join Payments p on od.OrderID = p.OrderID
             inner join Orders o on od.OrderID = o.OrderID
         where od.OrderID = @OrderID
+            and p.STATUS = 1 -- zatwierdzone
         group by od.UnitPrice, od.Quantity, o.DeliveryPrice
         return @Amount
     end;
