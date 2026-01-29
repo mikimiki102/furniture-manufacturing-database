@@ -1,19 +1,19 @@
-create or alter trigger  dbo.trg_AddOrderDate
-    on dbo.Payments
-    after update
-    as
-    begin
-        set nocount on;
+CREATE OR ALTER TRIGGER dbo.trg_AddOrderDate
+ON dbo.Payments
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-        if not update(STATUS)
-            return;
+    IF NOT UPDATE(Status)
+        RETURN;
 
-        update o
-        set o.OrderDate = GETDATE()
-        from Payments p
-        inner join Orders as o on o.OrderID = p.OrderID
-        inner join inserted as i on i.OrderID = o.OrderID
-        inner join deleted as d on d.OrderID = o.OrderID
-        where i.STATUS = 4
-            and d.STATUS <> 4;
-    end;
+    UPDATE o
+    SET o.OrderDate = GETDATE()
+    FROM dbo.Orders o
+    JOIN inserted i ON i.OrderID = o.OrderID
+    JOIN deleted  d ON d.PaymentID = i.PaymentID
+    WHERE i.Status = 1
+      AND d.Status <> 1;
+END
+GO
