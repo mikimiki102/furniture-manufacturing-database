@@ -1,21 +1,27 @@
-CREATE TABLE dbo.Orders (
-    OrderID INT IDENTITY(1,1) NOT NULL
-        CONSTRAINT PK_Orders PRIMARY KEY,
-    CustomerID INT NOT NULL
-        CONSTRAINT FK_Orders_Customers
-        FOREIGN KEY REFERENCES dbo.Customers(CustomerID),
-    EmployeeID INT NOT NULL
-        CONSTRAINT FK_Orders_Employees
-        FOREIGN KEY REFERENCES dbo.Employees(EmployeeID),
-    ShippersID INT NULL
-        CONSTRAINT FK_Orders_Shippers
-        FOREIGN KEY REFERENCES dbo.Shippers(ShipperID),
-    OrderDate DATETIME NOT NULL,
-    DeliveryDate DATETIME NULL,
-    Address NVARCHAR(200) NOT NULL,
-    Country NVARCHAR(100) NOT NULL,
-    City NVARCHAR(100) NOT NULL,
-    DeliveryPrice DECIMAL(10,2) NOT NULL
-        CONSTRAINT CK_Orders_DeliveryPrice CHECK (DeliveryPrice >= 0),
-    Status INT NOT NULL
-);
+create table Orders
+(
+    OrderID       int identity
+        constraint PK_Orders
+            primary key,
+    CustomerID    int                                    not null
+        constraint FK_Orders_Customers
+            references Customers,
+    EmployeeID    int                                    not null
+        constraint FK_Orders_Employees
+            references Employees,
+    ShippersID    int
+        constraint FK_Orders_Shippers
+            references Shippers,
+    OrderDate     datetime                               not null,
+    DeliveryDate  datetime,
+    Address       nvarchar(200)                          not null,
+    Country       nvarchar(100)                          not null,
+    City          nvarchar(100)                          not null,
+    DeliveryPrice decimal(10, 2)
+        constraint DF_Orders_DeliveryPrice default 14.99 not null
+        constraint CK_Orders_DeliveryPrice
+            check ([DeliveryPrice] >= 0),
+    Status        int
+        constraint DF_Orders_Status default 2            not null
+)
+go
