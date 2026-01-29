@@ -1,46 +1,44 @@
-delete from Payments where PaymentID > -1000;
+DELETE FROM dbo.Payments
+WHERE OrderID BETWEEN 1 AND 500;
 
--- Obliczamy sumy dla każdego zamówienia i wstawiamy płatności
-;WITH OrderSummary AS (
-    -- Obliczamy całkowitą wartość brutto zamówienia (produkty + dostawa)
-
-    SELECT
-        o.OrderID,
-        o.OrderDate,
-        SUM(od.UnitPrice * od.Quantity) + o.DeliveryPrice AS TotalValue
-    FROM dbo.Orders o
-             JOIN dbo.OrderDetails od ON o.OrderID = od.OrderID
-    GROUP BY o.OrderID, o.OrderDate, o.DeliveryPrice
+;WITH totals AS (
+  SELECT
+    o.OrderID,
+    CONVERT(date, o.OrderDate) AS PaymentDate,
+    o.Status AS OrderStatus,
+    CAST(ROUND(COALESCE(SUM(od.UnitPrice*od.Quantity),0) + COALESCE(o.DeliveryPrice,0), 2) * 100 AS bigint) AS TotalCents
+  FROM dbo.Orders o
+  LEFT JOIN dbo.OrderDetails od ON od.OrderID = o.OrderID
+  WHERE o.OrderID BETWEEN 1 AND 500
+  GROUP BY o.OrderID, o.OrderDate, o.Status, o.DeliveryPrice
 ),
-      PaymentRandomizer AS (
-          SELECT
-              OrderID,
-              OrderDate,
-              TotalValue,
-              CASE
-                  WHEN ABS(CHECKSUM(NEWID())) % 10 < 7 THEN 1.0
-                  WHEN ABS(CHECKSUM(NEWID())) % 10 < 9 THEN (ABS(CHECKSUM(NEWID())) % 51 + 30) / 100.0
-                  ELSE 0.0
-                  END AS PaymentFactor,
-              CASE
-                  WHEN ABS(CHECKSUM(NEWID())) % 10 < 8 THEN 1
-                  WHEN ABS(CHECKSUM(NEWID())) % 10 = 8 THEN 0
-                  ELSE -1
-                  END AS RandStatus,
-              ISNULL(CHOOSE(((CHECKSUM(NEWID()) & 2147483647) % 5) + 1,
-                     N'BLIK', N'Karta Kredytowa', N'Przelew', N'PayPal', N'Gotówka'), N'Przelew') AS RandMethod
-          FROM OrderSummary
-      )
-
- INSERT INTO dbo.Payments (OrderID, PaymentDate, Amount, STATUS, Method)
- SELECT
-     OrderID,
-     DATEADD(MINUTE, ABS(CHECKSUM(NEWID())) % 2880 + 60, OrderDate),
-     CAST(TotalValue * PaymentFactor AS INT),
-RandStatus,
-     ISNULL(CASE
-                WHEN RandStatus = -1 AND ABS(CHECKSUM(NEWID()) % 5) = 0 THEN N'Nieznana'
-                ELSE RandMethod
-                END, N'Przelew Bankowy') AS Method
- FROM PaymentRandomizer
- WHERE TotalValue * PaymentFactor > 0 OR RandStatus = 0;
+final AS (
+  SELECT
+    t.OrderID,
+    t.PaymentDate,
+    t.TotalCents,
+    CAST(
+      CASE
+        WHEN t.OrderStatus IN (3,4) THEN t.TotalCents                           
+        WHEN t.OrderStatus = 1 THEN 0                                          
+        WHEN t.OrderStatus = 2 THEN                                            
+          CASE
+            WHEN t.TotalCents <= 0 THEN 0
+            ELSE (t.TotalCents * (10 + (ABS(CHECKSUM(t.OrderID,'PF')) % 81))) / 100
+          END
+        ELSE 0
+      END
+    AS bigint) AS PaidCents,
+    CHOOSE(((ABS(CHECKSUM(t.OrderID,'M')) % 5) + 1),
+           N'BLIK', N'Przelew', N'PayPal', N'Karta', N'Gotówka') AS Method
+  FROM totals t
+)
+INSERT INTO dbo.Payments (OrderID, PaymentDate, Amount, STATUS, Method)
+SELECT
+  OrderID,
+  PaymentDate,
+  CAST(PaidCents / 100.0 AS decimal(10,2)) AS Amount,
+  0 AS STATUS, 
+  Method
+FROM final
+ORDER BY OrderID;
