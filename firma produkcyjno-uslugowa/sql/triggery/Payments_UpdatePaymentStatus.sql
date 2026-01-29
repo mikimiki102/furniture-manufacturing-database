@@ -3,40 +3,52 @@ ON dbo.Payments
 AFTER INSERT, UPDATE, DELETE
 AS
 BEGIN
-  SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-  ;WITH changed_orders AS (
-    SELECT OrderID FROM inserted
-    UNION
-    SELECT OrderID FROM deleted
-  ),
-  order_totals AS (
-    SELECT od.OrderID,
-           SUM(od.UnitPrice * od.Quantity) AS TotalAmount
-    FROM dbo.OrderDetails od
-    WHERE od.OrderID IN (SELECT OrderID FROM changed_orders)
-    GROUP BY od.OrderID
-  ),
-  paid_totals AS (
-    SELECT p.OrderID,
-           SUM(p.Amount) AS PaidAmount
+    ;WITH changed_orders AS (
+        SELECT OrderID FROM inserted
+        UNION
+        SELECT OrderID FROM deleted
+    ),
+    order_totals AS (
+        SELECT
+            o.OrderID,
+            CAST(
+                ROUND(
+                    COALESCE(SUM(od.UnitPrice * od.Quantity), 0)
+                    + COALESCE(o.DeliveryPrice, 0),
+                2) * 100
+            AS bigint) AS TotalCents
+        FROM dbo.Orders o
+        LEFT JOIN dbo.OrderDetails od ON od.OrderID = o.OrderID
+        WHERE o.OrderID IN (SELECT OrderID FROM changed_orders)
+        GROUP BY o.OrderID, o.DeliveryPrice
+    ),
+    paid_totals AS (
+        SELECT
+            p.OrderID,
+            CAST(ROUND(COALESCE(SUM(p.Amount), 0), 2) * 100 AS bigint) AS PaidCents
+        FROM dbo.Payments p
+        WHERE p.OrderID IN (SELECT OrderID FROM changed_orders)
+        GROUP BY p.OrderID
+    ),
+    combined AS (
+        SELECT
+            ot.OrderID,
+            ot.TotalCents,
+            ISNULL(pt.PaidCents, 0) AS PaidCents
+        FROM order_totals ot
+        LEFT JOIN paid_totals pt ON pt.OrderID = ot.OrderID
+    )
+
+    UPDATE p
+    SET p.STATUS =
+        CASE
+            WHEN c.TotalCents > 0 AND c.PaidCents >= c.TotalCents THEN 1
+            ELSE 0
+        END
     FROM dbo.Payments p
-    WHERE p.OrderID IN (SELECT OrderID FROM changed_orders)
-    GROUP BY p.OrderID
-  ),
-  combined AS (
-    SELECT co.OrderID,
-           ISNULL(pt.PaidAmount, 0)   AS PaidAmount,
-           ISNULL(ot.TotalAmount, 0)  AS TotalAmount
-    FROM (SELECT DISTINCT OrderID FROM changed_orders) co
-    LEFT JOIN order_totals ot ON ot.OrderID = co.OrderID
-    LEFT JOIN paid_totals pt ON pt.OrderID = co.OrderID
-  )
-  UPDATE o
-     SET o.Status =
-         CASE WHEN c.TotalAmount > 0 AND c.PaidAmount >= c.TotalAmount
-              THEN 1 ELSE 0 END
-  FROM dbo.Orders o
-  JOIN combined c ON c.OrderID = o.OrderID;
+    JOIN combined c ON c.OrderID = p.OrderID
+    WHERE p.OrderID IN (SELECT OrderID FROM changed_orders);
 END;
 GO
