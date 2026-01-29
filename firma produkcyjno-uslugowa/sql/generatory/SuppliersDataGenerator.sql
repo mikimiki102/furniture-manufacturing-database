@@ -27,28 +27,27 @@ INSERT INTO @AddressBook (City, Country, PhoneCode, StreetName) VALUES
  (N'Zurich',    N'Switzerland', N'+41',  N'Bahnhofstrasse'),
  (N'Vienna',    N'Austria',     N'+43',  N'Ringstraße'),
 
- -- EUROPA ŚRODKOWA i WSCHODNIA
+
  (N'Warsaw',    N'Poland',      N'+48',  N'ul. Marszałkowska'),
  (N'Prague',    N'Czech Rep.',  N'+420', N'Vaclavske namesti'),
  (N'Budapest',  N'Hungary',     N'+36',  N'Vaci utca'),
  (N'Athens',    N'Greece',      N'+30',  N'Ermou Street'),
  (N'Istanbul',  N'Turkey',      N'+90',  N'Istiklal Caddesi'),
 
- -- AMERYKI
+
  (N'New York',  N'USA',         N'+1',   N'5th Avenue'),
  (N'Toronto',   N'Canada',      N'+1',   N'Yonge Street'),
  (N'Mexico City',N'Mexico',     N'+52',  N'Paseo de la Reforma'),
  (N'Sao Paulo', N'Brazil',      N'+55',  N'Avenida Paulista'),
  (N'Buenos Aires',N'Argentina', N'+54',  N'Avenida 9 de Julio'),
 
- -- AZJA i PACYFIK
+
  (N'Tokyo',     N'Japan',       N'+81',  N'Chuo-dori'),
  (N'Beijing',   N'China',       N'+86',  N'Wangfujing'),
  (N'Seoul',     N'South Korea', N'+82',  N'Gangnam-daero'),
  (N'Sydney',    N'Australia',   N'+61',  N'George Street');
 
 
--- 2. CZĘŚCI NAZW FIRM
 DECLARE @Adj TABLE (val nvarchar(100));
 INSERT INTO @Adj VALUES (N'Global'),(N'Eco'),(N'Smart'),(N'Best'),(N'Pro'),(N'Mega'),(N'Super'),(N'General'),(N'Rapid'),(N'Top'),(N'Prime'),(N'Solid'),(N'First'),(N'Blue'),(N'Red'),(N'Golden'),(N'Silver'),(N'Iron'),(N'Steel'),(N'Heavy'),(N'Light'),(N'Fast'),(N'Direct'),(N'Pacific'),(N'Atlantic'),(N'Universal'),(N'Royal'),(N'Advanced');
 
@@ -59,12 +58,11 @@ DECLARE @Suf TABLE (val nvarchar(100));
 INSERT INTO @Suf VALUES (N'Sp. z o.o.'),(N'S.A.'),(N'GmbH'),(N'Inc.'),(N'LLC'),(N'Corp.'),(N'Ltd.'),(N'AB'),(N'NV'),(N'Oy');
 
 
--- 3. GENEROWANIE DANYCH
 ;WITH Cnts AS (
   SELECT (SELECT COUNT(*) FROM @Adj)   AS cA,
          (SELECT COUNT(*) FROM @Noun)  AS cN,
          (SELECT COUNT(*) FROM @Suf)   AS cS,
-         (SELECT COUNT(*) FROM @AddressBook) AS cAddr -- Powinno być 28
+         (SELECT COUNT(*) FROM @AddressBook) AS cAddr
 ),
 Tally AS (
   SELECT TOP (@NS) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS rn
