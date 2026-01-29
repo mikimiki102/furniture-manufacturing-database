@@ -1,8 +1,8 @@
-CREATE ROLE client;
+CREATE ROLE endUser;
 
-GRANT SELECT ON Products to client;
+GRANT SELECT ON Products to endUser;
 
-GRANT EXECUTE ON AddCustomer to client;
-GRANT EXECUTE ON ChangeCustomerContact  to client;
-GRANT EXECUTE ON ChangeCustomerData to client;
+GRANT EXECUTE ON AddCustomer to endUser;
+GRANT EXECUTE ON ChangeCustomerContact  to endUser;
+GRANT EXECUTE ON ChangeCustomerData to endUser;
 
